@@ -1,52 +1,31 @@
 function diffReactions(yesterdayReactions, todayReactions) {
-  const yesterdayKeys = Object.keys(yesterdayReactions);
-  const todaysKeys = Object.keys(todayReactions);
-  const totalKeys = [...new Set([...yesterdayKeys, ...todaysKeys])];
-  if (yesterdayKeys.length === 0) {
-    return todaysKeys.flatMap((key) => {
-      return todayReactions[key].map((react) => {
-        return `${key} react with ${react}`;
-      });
-    });
-  }
-  if (todaysKeys.length === 0) {
-    return yesterdayKeys.flatMap((key) => {
-      return yesterdayReactions[key].map((react) => {
-        return `${key} removed their ${react}`;
-      });
-    });
-  }
-  const arr = [];
-  for (const key of totalKeys) {
-    const yesterdayValues = yesterdayReactions[key];
-    const todayValues = todayReactions[key];
-    if (!todayValues && yesterdayValues) {
-      yesterdayValues.forEach((value) => {
-        arr.push(`${key} removed their ${value}`);
-      });
-    }
-    if (todayValues && !yesterdayValues) {
-      todayValues.forEach((value) => {
-        arr.push(`${key} reacted with ${value}`);
-      });
+  const allUsers = new Set([
+    ...Object.keys(yesterdayReactions),
+    ...Object.keys(todayReactions),
+  ]);
+  const changes = [];
+  for (const user of allUsers) {
+    const yesterdayArr = yesterdayReactions[user] || [];
+    const todayArr = todayReactions[user] || [];
+
+    const yesterdaySet = new Set(yesterdayArr);
+    const todaySet = new Set(todayArr);
+
+    // 오늘은 있으나 어제는 없는. 즉 추가된 상태
+    for (const react of todayArr) {
+      if (!yesterdaySet.has(react)) {
+        changes.push(`${user} reacted with ${react}`);
+      }
     }
 
-    if (todayValues && yesterdayValues) {
-      todayValues.forEach((value) => {
-        const result = yesterdayValues.includes(value);
-        if (!result) {
-          arr.push(`${key} reacted with ${value}`);
-        }
-      });
-      yesterdayValues.forEach((value) => {
-        const result = todayValues.includes(value);
-        if (!result) {
-          arr.push(`${key} removed their ${value}`);
-        }
-      });
+    // 어제는 있으나 오늘은 없는. 즉, 제거된 상태
+    for (const react of yesterdayArr) {
+      if (!todaySet.has(react)) {
+        changes.push(`${user} removed their ${react}`);
+      }
     }
   }
-  return arr;
+  return changes;
 }
 
 export { diffReactions };
