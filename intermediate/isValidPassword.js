@@ -8,5 +8,3 @@ function isValidPassword(password) {
   const condition3 = specialLetterRegex.test(password);
   return condition1 && condition2 && condition3;
 }
-
-isValidPassword("A!B2C2");
