@@ -1,59 +1,46 @@
 function findFreeCalendarSpots(meetings) {
-  const startWorkTime = 9 * 60;
-  const endWorkTime = 17 * 60;
-  const result = meetings
-    .map((meeting) => {
-      const {
-        duration,
-        startTime: { hours, minutes },
-      } = meeting;
-      const minuteStartTime = hours * 60 + minutes;
-      const minutesEndTime = minuteStartTime + duration;
-      return { minuteStartTime, minutesEndTime };
+  const START_WORK_MINUTES = 9 * 60;
+  const END_WORK_MINUTES = 17 * 60;
+  const sortedMeetings = meetings
+    .map(({ duration, startTime: { hours, minutes } }) => {
+      const start = hours * 60 + minutes;
+      return { start, end: start + duration };
     })
-    .toSorted((a, b) => a.minuteStartTime - b.minuteStartTime);
+    .toSorted((a, b) => a.start - b.start);
 
-  if (result.length === 0)
-    return [{ duration: 480, startTime: { hours: 9, minutes: 0 } }];
+  const mergedMeetings = [];
+  for (const current of sortedMeetings) {
+    if (mergedMeetings.length === 0) {
+      mergedMeetings.push(current);
+      continue;
+    }
 
-  const answer = [];
-  for (let i = 1; i < result.length; i++) {
-    const prevTime = result[i - 1];
-    const currentTime = result[i];
-    if (currentTime.minuteStartTime > prevTime.minutesEndTime) {
-      answer.push({
-        duration: currentTime.minuteStartTime - prevTime.minutesEndTime,
-        startTime: {
-          hours: parseInt(prevTime.minutesEndTime / 60),
-          minutes: prevTime.minutesEndTime % 60,
-        },
-      });
+    let lastMerged = mergedMeetings[mergedMeetings.length - 1];
+    if (current.start <= lastMerged.end) {
+      lastMerged.end = Math.max(current.end, lastMerged.end);
+    } else {
+      mergedMeetings.push(current);
     }
   }
-
-  const firstValue = result[0];
-  const lastValue = result[result.length - 1];
-
-  if (firstValue.minuteStartTime > startWorkTime) {
-    answer.push({
-      duration: firstValue.minuteStartTime - startWorkTime,
-      startTime: {
-        hours: parseInt(startWorkTime / 60),
-        minutes: startWorkTime % 60,
-      },
-    });
+  const freeSpots = [];
+  let currentTimeline = START_WORK_MINUTES;
+  for (const meeting of mergedMeetings) {
+    if (meeting.startTime > currentTimeline) {
+      freeSpots.push(createSpotObject(currentTimeline, meeting.start));
+    }
+    currentTimeline = Math.max(currentTimeline, meeting.end);
   }
-
-  if (lastValue.minutesEndTime < endWorkTime) {
-    answer.push({
-      duration: endWorkTime - lastValue.minutesEndTime,
-      startTime: {
-        hours: parseInt(lastValue.minutesEndTime / 60),
-        minutes: lastValue.minutesEndTime % 60,
-      },
-    });
+  if (currentTimeline < END_WORK_MINUTES) {
+    freeSpots.push(createSpotObject(currentTimeline, END_WORK_MINUTES));
   }
-
-  return answer;
 }
-export { findFreeCalendarSpots };
+
+function createSpotObject(startMinutes, endMinutes) {
+  return {
+    duration: endMinutes - startMinutes,
+    startTime: {
+      hours: Math.floor(startMinutes / 60),
+      minutes: startMinutes % 60,
+    },
+  };
+}
