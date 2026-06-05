@@ -1,8 +1,8 @@
 function createQueue() {
-  let items = [];
+  const items = [];
   const queue = {
     add(num) {
-      items = [...items, num];
+      items.push(num);
     },
     list() {
       return [...items];
@@ -14,5 +14,3 @@ function createQueue() {
 
   return queue;
 }
-
-export { createQueue };
