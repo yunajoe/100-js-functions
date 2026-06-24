@@ -1,52 +1,50 @@
-function isDeepEqual(object1, object2) {}
+function isDeepEqual(object1, object2) {
+  // 타입이 다르면 false
+  if (typeof object1 !== typeof object2) return false;
 
-// const storeA = {
-//   storeName: "강남점",
-//   inventory: new Map([
-//     ["apple", 10],
-//     ["banana", 20],
-//   ]),
-// };
+  // 원시값일때
+  if (typeof object1 !== "object" && typeof object2 !== "object") {
+    if (object1 !== object2) return false;
+    return true;
+  }
 
-// const storeB = {
-//   storeName: "강남점",
-//   inventory: new Map([
-//     ["apple", 10],
-//     ["banana", 20],
-//   ]),
-// };
+  // array일떄
+  if (Array.isArray(object1) && Array.isArray(object2)) {
+    if (object1.length !== object2.length) return false;
+    object1.sort((a, b) => a - b);
+    object2.sort((a, b) => a - b);
+    for (let i = 0; i < object1.length; i++) {
+      const result = isDeepEqual(object1[i], object2[i]);
+      if (!result) return false;
+    }
+    return true;
+  }
 
-// const storeC = {
-//   storeName: "강남점",
-//   inventory: new Map([
-//     ["apple", 10], // banana가 없음!
-//   ]),
-// };
+  // date일때
+  if (object1 instanceof Date && object2 instanceof Date) {
+    if (object1.getTime() !== object2.getTime()) {
+      return false;
+    }
+    return true;
+  }
 
-// console.log(isDeepEqual(storeA, storeB)); // ⭕ true
-// console.log(isDeepEqual(storeA, storeC)); // ❌ false
+  // map일떄
+  if (object1 instanceof Map && object2 instanceof Map) {
+    if (object1.size !== object2.size) return false;
+    for (const [key, value] of object1) {
+      if (!object2.has(key)) return false;
+      const result = isDeepEqual(value, object2.get(key));
+      if (!result) return false;
+    }
 
-// const date1 = new Date("2026-01-01");
-// const date2 = new Date("2026-01-01");
+    return true;
+  }
 
-// console.log(isDeepEqual({ time: date1 }, { time: date2 })); // ⭕ true
-const userA = {
-  name: "Kim",
-  hobby: ["coding", "gaming"], // 배열 포함
-  address: { city: "Seoul" }, // 중첩 객체 포함
-};
-
-const userB = {
-  name: "Kim",
-  hobby: ["coding", "gaming"],
-  address: { city: "Seoul" },
-};
-
-const userC = {
-  name: "Kim",
-  hobby: ["coding", "cooking"], // hobby 내용이 다름!
-  address: { city: "Seoul" },
-};
-
-console.log(isDeepEqual(userA, userB)); // ⭕ true
-console.log(isDeepEqual(userA, userC)); // ❌ false
+  // object 일떄 (순수)
+  for (const [key, value] of Object.entries(object1)) {
+    if (!Object.prototype.hasOwnProperty.call(object2, key)) return false;
+    const result = isDeepEqual(value, object2[key]);
+    if (!result) return false;
+  }
+  return true;
+}
