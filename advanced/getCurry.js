@@ -1,10 +1,12 @@
 function getCurry(callback) {
-  const argumentsArray = [];
+  let argumentsArray = [];
   return function innerFunc(...args) {
-    if (args.length > 0) {
-      argumentsArray.push(...args);
+    if (!args || args.length === 0) {
+      const copyArgumentsArray = [...argumentsArray];
+      argumentsArray = [];
+      return callback(...copyArgumentsArray);
     }
-    if (!args || args.length === 0) return callback(...argumentsArray);
+    argumentsArray.push(...args);
     return innerFunc;
   };
 }
@@ -21,13 +23,13 @@ function getCurry(callback) {
 // console.log(currySum(1)()); // 1
 // console.log(currySum(1)(2)()); // 3
 
-// const diff = (...params) => {
-//   let result = params[0] ?? 0;
-//   for (let i = 1; i < params.length; i++) {
-//     result -= params[i];
-//   }
-//   return result;
-// };
+const diff = (...params) => {
+  let result = params[0] ?? 0;
+  for (let i = 1; i < params.length; i++) {
+    result -= params[i];
+  }
+  return result;
+};
 
 // const curryDiff = getCurry(diff);
 // console.log(curryDiff()); // 0
